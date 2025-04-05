@@ -135,6 +135,7 @@ export function MusicInput() {
               <strong>🎤 Artist:</strong> {trackInfo.artist}
             </p>
             <p>
+              {/* 5 metrics still work in progress: hard-coded for now */}
               <strong>⏱️ BPM:</strong> {123}
             </p>
             <p>
