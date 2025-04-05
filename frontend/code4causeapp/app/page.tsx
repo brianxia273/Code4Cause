@@ -1,10 +1,9 @@
-import Image from "next/image";
-import { Container } from "@/components/layout/Container";
+import { MainContainer } from "@/components/layout/MainContainer";
 
 export default function Home() {
   return (
     <div>
-      <Container></Container>
+      <MainContainer></MainContainer>
     </div>
   );
 }
