@@ -1,0 +1,96 @@
+/* main.css */
+
+/* Card Styles */
+.card-large {
+  width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  justify-content: center;
+  text-align: center;
+  margin-top: -300px;
+}
+
+.card-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px; /* Adjust font size for readability */
+}
+
+/* Animation for card appearance */
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quote-section {
+  padding-top: 100px;
+  font-size: 25px;
+}
+
+.animate-card-entry {
+  opacity: 0;
+  animation: fadeSlideUp 5s ease-out forwards;
+}
+
+/* Adding hover effect to buttons */
+button:hover {
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+}
+
+/* Background Gradient */
+body {
+  background-color: rgb(224, 202, 173);
+  font-family: Arial, sans-serif;
+}
+
+.text-3xl {
+  margin-bottom: 50px;
+}
+
+/* main.css */
+
+/* Header Styles */
+header {
+  padding: 20px 0;
+  font-size: 20px;
+}
+
+header .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+header nav ul {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+header nav ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.2rem;
+}
+
+header nav ul li a:hover {
+  color: #f7f7f7;
+  text-decoration: underline;
+}
+
+.flex space-x-6 {
+  color: white;
+}
