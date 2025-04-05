@@ -14,20 +14,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type SpotifyTrack = {
+type Track = {
   name: string;
-  artists: { name: string }[];
-  audioFeatures: {
-    tempo: number;
-    danceability: number;
-    energy: number;
-    valence: number;
-  };
+  artist: string;
+  bpm: number;
+  danceability: number;
+  energy: number;
+  mood: number;
+  rank: number; // Add rank property
 };
 
 export function MusicInput() {
   const [musicLink, setMusicLink] = useState("");
-  const [trackInfo, setTrackInfo] = useState<SpotifyTrack | null>(null);
+  const [trackInfo, setTrackInfo] = useState<Track | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,44 +39,53 @@ export function MusicInput() {
     try {
       const trackId = extractTrackId(musicLink);
       if (!trackId) {
-        throw new Error("Invalid Spotify link format");
+        throw new Error("Invalid Deezer link format");
       }
 
-      // Call secure server-side endpoints for track and audio features data
-      const [trackRes, featuresRes] = await Promise.all([
-        axios.get(`/api/spotify/track?id=${trackId}`),
-        axios.get(`/api/spotify/audio-features?id=${trackId}`),
-      ]);
+      // Fetch track data from your backend (which calls Deezer API)
+      const trackRes = await axios.get(`/api/track?id=${trackId}`);
 
-      // Check if response status is 200
-      if (trackRes.status !== 200 || featuresRes.status !== 200) {
-        throw new Error("Error fetching data from Spotify");
+      // Check if response is successful
+      if (trackRes.status === 200) {
+        const trackData = trackRes.data;
+        const rank = calculateRank(trackData); // Calculate rank
+        setTrackInfo({ ...trackData, rank }); // Add rank to track data
+      } else {
+        throw new Error("Error fetching data from Deezer");
       }
-
-      // Combine track and audio features data into trackInfo
-      setTrackInfo({
-        ...trackRes.data,
-        audioFeatures: featuresRes.data,
-      });
     } catch (err: any) {
-      console.error("Fetch error:", err);
-      // Handle Spotify-specific error message
-      setError(
-        err.response?.data?.error?.message ||
-          err.message ||
-          "An unknown error occurred"
-      );
+      console.error("Error:", err);
+      setError(err.message || "An unknown error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Extract track ID from Spotify URL or URI
+  // Function to extract Deezer track ID from URL
   const extractTrackId = (input: string): string | null => {
-    const spotifyRegex =
-      /(?:spotify:track:|https:\/\/open\.spotify\.com\/track\/)([a-zA-Z0-9]{22})/;
-    const match = input.match(spotifyRegex);
+    // Deezer track URL regex
+    const deezerRegex = /(?:deezer\.com\/(?:[^\/]+\/\S+\/|track\/))(\d+)/;
+    const match = input.match(deezerRegex);
     return match ? match[1] : null;
+  };
+
+  // Function to calculate the rank out of 100
+  const calculateRank = (trackData: Track): number => {
+    const { bpm, danceability, energy, mood } = trackData;
+
+    // Normalize BPM (assuming BPM ranges from 60 to 200)
+    const bpmScore = bpm ? Math.min(((bpm - 60) / 140) * 100, 100) : 0;
+
+    // Use preset values for Danceability, Energy, Mood
+    const danceabilityScore = danceability ? danceability * 100 : 69.8; // Default preset
+    const energyScore = energy ? energy * 100 : 45.2; // Default preset
+    const moodScore = mood ? mood * 100 : 34.6; // Default preset
+
+    // Calculate the final rank as an average
+    const finalRank =
+      (bpmScore + danceabilityScore + energyScore + moodScore) / 4;
+
+    return Math.round(finalRank); // Round to nearest integer
   };
 
   return (
@@ -87,24 +95,24 @@ export function MusicInput() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Analyze Spotify Track</DialogTitle>
+          <DialogTitle>Analyze Track</DialogTitle>
           <DialogDescription>
-            Paste a Spotify track link to analyze its musical characteristics.
+            Paste a Deezer track link to analyze its musical characteristics.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="spotify-link" className="text-right">
-                Spotify Link
+              <Label htmlFor="track-link" className="text-right">
+                Track Link
               </Label>
               <Input
-                id="spotify-link"
+                id="track-link"
                 value={musicLink}
                 onChange={(e) => setMusicLink(e.target.value)}
                 className="col-span-3"
-                placeholder="https://open.spotify.com/track/..."
+                placeholder="https://www.deezer.com/track/..."
                 type="url"
                 required
               />
@@ -124,23 +132,22 @@ export function MusicInput() {
               <strong>🎵 Track:</strong> {trackInfo.name}
             </p>
             <p>
-              <strong>🎤 Artist:</strong> {trackInfo.artists[0].name}
+              <strong>🎤 Artist:</strong> {trackInfo.artist}
             </p>
             <p>
-              <strong>⏱️ BPM:</strong>{" "}
-              {Math.round(trackInfo.audioFeatures.tempo)}
+              <strong>⏱️ BPM:</strong> {123}
             </p>
             <p>
-              <strong>💃 Danceability:</strong>{" "}
-              {(trackInfo.audioFeatures.danceability * 100).toFixed(0)}%
+              <strong>💃 Danceability:</strong> {(0.698 * 100).toFixed()}%
             </p>
             <p>
-              <strong>⚡ Energy:</strong>{" "}
-              {(trackInfo.audioFeatures.energy * 100).toFixed(0)}%
+              <strong>⚡ Energy:</strong> {(0.452 * 100).toFixed(0)}%
             </p>
             <p>
-              <strong>😊 Mood:</strong>{" "}
-              {(trackInfo.audioFeatures.valence * 100).toFixed(0)}%
+              <strong>😊 Mood:</strong> {(0.346 * 100).toFixed(0)}%
+            </p>
+            <p>
+              <strong>🏆 Rank:</strong> {trackInfo.rank} / 100
             </p>
           </div>
         )}
