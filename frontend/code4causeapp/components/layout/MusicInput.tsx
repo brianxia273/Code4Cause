@@ -18,15 +18,22 @@ type Track = {
   name: string;
   artist: string;
   bpm: number;
-  danceability: number;
-  energy: number;
-  mood: number;
-  rank: number; // Add rank property
+  explicit_lyrics: boolean;
+  rank: number;
+};
+
+type Album = {
+  id: string;
+  title: string;
+  bpm: number;
+  artist: string;
+  explicit_lyrics: boolean;
+  rank: number;
 };
 
 export function MusicInput() {
   const [musicLink, setMusicLink] = useState("");
-  const [trackInfo, setTrackInfo] = useState<Track | null>(null);
+  const [trackInfo, setTrackInfo] = useState<Track | Album | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,20 +45,32 @@ export function MusicInput() {
 
     try {
       const trackId = extractTrackId(musicLink);
-      if (!trackId) {
-        throw new Error("Invalid Deezer link format");
-      }
+      const albumId = extractAlbumId(musicLink);
 
-      // Fetch track data from your backend (which calls Deezer API)
-      const trackRes = await axios.get(`/api/track?id=${trackId}`);
+      if (trackId) {
+        // Fetch track data from your backend (which calls Deezer API)
+        const trackRes = await axios.get(`/api/track?id=${trackId}`);
 
-      // Check if response is successful
-      if (trackRes.status === 200) {
-        const trackData = trackRes.data;
-        const rank = calculateRank(trackData); // Calculate rank
-        setTrackInfo({ ...trackData, rank }); // Add rank to track data
+        if (trackRes.status === 200) {
+          const trackData = trackRes.data;
+          const rank = calculateRank(trackData.bpm, trackData.explicit_lyrics);
+          setTrackInfo({ ...trackData, rank });
+        } else {
+          throw new Error("Error fetching data from Deezer");
+        }
+      } else if (albumId) {
+        // Fetch album data from your backend (which calls Deezer API)
+        const albumRes = await axios.get(`/api/album?id=${albumId}`);
+
+        if (albumRes.status === 200) {
+          const albumData = albumRes.data;
+          const rank = calculateRank(albumData.bpm, albumData.explicit_lyrics);
+          setTrackInfo({ ...albumData, rank });
+        } else {
+          throw new Error("Error fetching data from Deezer");
+        }
       } else {
-        throw new Error("Error fetching data from Deezer");
+        throw new Error("Invalid Deezer link format");
       }
     } catch (err: any) {
       console.error("Error:", err);
@@ -63,29 +82,39 @@ export function MusicInput() {
 
   // Function to extract Deezer track ID from URL
   const extractTrackId = (input: string): string | null => {
-    // Deezer track URL regex
-    const deezerRegex = /(?:deezer\.com\/(?:[^\/]+\/\S+\/|track\/))(\d+)/;
-    const match = input.match(deezerRegex);
+    const deezerTrackRegex = /deezer\.com\/track\/(\d+)/;
+    const match = input.match(deezerTrackRegex);
     return match ? match[1] : null;
   };
 
-  // Function to calculate the rank out of 100
-  const calculateRank = (trackData: Track): number => {
-    const { bpm, danceability, energy, mood } = trackData;
+  // Function to extract Deezer album ID from URL
+  const extractAlbumId = (input: string): string | null => {
+    const deezerAlbumRegex = /deezer\.com\/album\/(\d+)/;
+    const match = input.match(deezerAlbumRegex);
+    return match ? match[1] : null;
+  };
 
-    // Normalize BPM (assuming BPM ranges from 60 to 200)
-    const bpmScore = bpm ? Math.min(((bpm - 60) / 140) * 100, 100) : 0;
+  // Function to calculate rank based on BPM and explicit content
+  const calculateRank = (bpm: number, explicit_lyrics: boolean): number => {
+    let baseRank = 50;
 
-    // Use preset values for Danceability, Energy, Mood
-    const danceabilityScore = danceability ? danceability * 100 : 69.8; // Default preset
-    const energyScore = energy ? energy * 100 : 45.2; // Default preset
-    const moodScore = mood ? mood * 100 : 34.6; // Default preset
+    // Use BPM to determine rank
+    if (bpm === 0) {
+      baseRank = 40; // Handle tracks with BPM of 0 (unknown or non-standard tempo)
+    } else if (bpm < 100) {
+      baseRank = 40; // Slow tempo tracks
+    } else if (bpm >= 100 && bpm <= 120) {
+      baseRank = 60; // Medium tempo tracks
+    } else {
+      baseRank = 80; // Fast tempo tracks
+    }
 
-    // Calculate the final rank as an average
-    const finalRank =
-      (bpmScore + danceabilityScore + energyScore + moodScore) / 4;
+    // Adjust rank for explicit content
+    if (explicit_lyrics) {
+      baseRank -= 15; // Subtract 15 points for explicit content
+    }
 
-    return Math.round(finalRank); // Round to nearest integer
+    return Math.max(0, Math.min(100, baseRank));
   };
 
   return (
@@ -95,24 +124,25 @@ export function MusicInput() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Analyze Track</DialogTitle>
+          <DialogTitle>Analyze Track or Album</DialogTitle>
           <DialogDescription>
-            Paste a Deezer track link to analyze its musical characteristics.
+            Paste a Deezer track or album link to analyze its musical
+            characteristics.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="track-link" className="text-right">
-                Track Link
+              <Label htmlFor="music-link" className="text-right">
+                Music Link
               </Label>
               <Input
-                id="track-link"
+                id="music-link"
                 value={musicLink}
                 onChange={(e) => setMusicLink(e.target.value)}
                 className="col-span-3"
-                placeholder="https://www.deezer.com/track/..."
+                placeholder="https://www.deezer.com/track/... or https://www.deezer.com/album/..."
                 type="url"
                 required
               />
@@ -120,32 +150,26 @@ export function MusicInput() {
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Analyzing..." : "Analyze Track"}
+              {isLoading ? "Analyzing..." : "Analyze Music"}
             </Button>
           </DialogFooter>
         </form>
 
         {trackInfo && (
           <div className="py-4 space-y-2">
-            <h3 className="font-bold">Track Analysis</h3>
+            <h3 className="font-bold">Music Analysis</h3>
             <p>
-              <strong>🎵 Track:</strong> {trackInfo.name}
+              <strong>🎵 Title:</strong> {trackInfo.title}
             </p>
             <p>
               <strong>🎤 Artist:</strong> {trackInfo.artist}
             </p>
             <p>
-              {/* 5 metrics still work in progress: hard-coded for now */}
-              <strong>⏱️ BPM:</strong> {123}
+              <strong>🎶 BPM:</strong> {trackInfo.bpm}
             </p>
             <p>
-              <strong>💃 Danceability:</strong> {(0.698 * 100).toFixed()}%
-            </p>
-            <p>
-              <strong>⚡ Energy:</strong> {(0.452 * 100).toFixed(0)}%
-            </p>
-            <p>
-              <strong>😊 Mood:</strong> {(0.346 * 100).toFixed(0)}%
+              <strong>🚨 Explicit Content:</strong>{" "}
+              {trackInfo.explicit_lyrics ? "Yes" : "No"}
             </p>
             <p>
               <strong>🏆 Rank:</strong> {trackInfo.rank} / 100
