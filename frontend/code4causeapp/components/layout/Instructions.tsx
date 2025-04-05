@@ -9,7 +9,6 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
 const components: { title: string; href: string; description: string }[] = [
@@ -55,16 +54,18 @@ export function Instructions() {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuTrigger>Getting started</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+          <NavigationMenuTrigger className="text-md font-medium text-gray-900 hover:text-accent-foreground">
+            Getting started
+          </NavigationMenuTrigger>
+          <NavigationMenuContent className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl shadow-lg p-4 md:w-[500px] lg:w-[600px]">
+            <ul className="grid gap-3 p-4 lg:grid-cols-[.75fr_1fr]">
               <li className="row-span-3">
                 <NavigationMenuLink asChild>
                   <a
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-4 no-underline outline-none focus:shadow-md"
                     href="/"
                   >
-                    <div className="mb-2 mt-4 text-lg font-medium">
+                    <div className="mb-2 mt-4 text-lg font-semibold text-gray-800">
                       StudyBeats
                     </div>
                     <p className="text-sm leading-tight text-muted-foreground">
@@ -73,11 +74,6 @@ export function Instructions() {
                   </a>
                 </NavigationMenuLink>
               </li>
-              <ListItem href="/docs" title="Introduction">
-                StudyBeats is the perfect music app to boost your focus while
-                studying and to always be <strong>in the zone</strong> with
-                productive beats!
-              </ListItem>
               <ListItem href="/docs" title="How It Works">
                 Paste your YouTube link, and our evaluation{" "}
                 <strong>ranks</strong> the music's
@@ -107,7 +103,9 @@ const ListItem = React.forwardRef<
           )}
           {...props}
         >
-          <div className="text-sm font-medium leading-none">{title}</div>
+          <div className="text-sm font-medium leading-none text-gray-800">
+            {title}
+          </div>
           <p className="text-sm leading-snug text-muted-foreground">
             {children}
           </p>

@@ -11,8 +11,8 @@ import { Instructions } from "@/components/layout/Instructions";
 
 export function MainContainer() {
   return (
-    <div className="flex justify-center items-center mt-50">
-      <Container></Container>
+    <div className="flex justify-center items-center bg-gradient-to-r from-pink-200 via-peach-200 to-lime-200 min-h-screen">
+      <Container />
     </div>
   );
 }
