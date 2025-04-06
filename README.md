@@ -23,18 +23,8 @@ StudySession is built with a modern **full-stack architecture**, leveraging **Re
 - **Routing:** React Router
 
 ### **Backend**
-- **Framework:** Django with Django REST Framework (DRF)
-- **Authentication:** Token-based authentication using Django REST Framework's built-in token system
-- **Database:** PostgreSQL
-- **AI Integration:** Google Gemini AI API for intelligent chatbot responses and drink analysis
-- **Cloud Storage:** Cloudflare R2 (S3-compatible storage) for storing drink images
-- **Background Processing:** Asynchronous processing for AI analysis and image handling
+- **Framework:** ExpressJS
 
-### **Deployment & Infrastructure**
-- **Frontend Hosting:** Vercel
-- **Backend Hosting:** Railway 
-- **Storage:** Cloudflare R2 for scalable and efficient media storage
-- **Security:** HTTPS, Token-based authentication, Secure file uploads
 
 ---
 
